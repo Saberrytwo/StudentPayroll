@@ -48,7 +48,9 @@ app.get('/get-table-data', async (req, res) => {
 })
 
 app.post('/update-row', (req, res) => {
-  knex('Employee').where('byuId', req.body.byuId)
+  knex('Employee')
+  .join('EmployeePayInfo', 'Employee.byuId', 'EmployeePayInfo.employeeId')
+  .where('byuId', req.body.byuId)
   .update({
     [req.body.column]: req.body.value
   }).then(result => { res.status(200); res.send(); })
