@@ -27,12 +27,16 @@ app.get('/', (req, res) => {
 });
 
 app.get('/get-table-data', async (req, res) => {
-  var supervisors = await knex('Supervisor');
+  const supervisors = await knex('Supervisor');
+  const positions = await knex('Position');
+  const years = await knex('EmployeeSemesterPositionLink').distinct().pluck('year');
 
   var supervisorsWithEmployees = await Promise.all(supervisors.map(async el => {
-    return knex('EmployeeSupervisorLink')
-      .join('Employee', 'Employee.byuId', 'EmployeeSupervisorLink.employeeId')
+    return knex('EmployeeSemesterPositionLink')
+      .join('Position', 'Position.id', 'EmployeeSemesterPositionLink.positionId')
+      .join('Employee', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId')
       .join('EmployeePayInfo', 'Employee.byuId', 'EmployeePayInfo.employeeId')
+      .join('Semester', 'Semester.id', 'EmployeeSemesterPositionLink.semesterId')
       .where('supervisorId', el.id).then(employees => {
       return {
         supervisor: {
@@ -44,12 +48,40 @@ app.get('/get-table-data', async (req, res) => {
     })
   }));
 
-  res.send(supervisorsWithEmployees);
-})
+  const response = 
+  { 
+    positions: positions, 
+    years: years.sort(function(a, b) {
+    return b - a;
+    }), 
+    supervisors: supervisorsWithEmployees 
+  }
+
+  console.log(response)
+  res.send(response);
+});
+
+app.get('/get-report-data', async (req, res) => {
+  const employees = await knex('Employee').join('EmployeeSemesterPositionLink', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId');
+  const taCount = employees.filter(emp => emp.position === 1).length;
+  const raCount = employees.filter(emp => emp.position === 2).length;
+
+  const reportsData = {
+    barChart: {
+      taCount: taCount,
+      raCount: raCount
+    }
+  }
+
+  res.send(reportsData);
+});
 
 app.post('/update-row', (req, res) => {
-  knex('Employee')
-  .join('EmployeePayInfo', 'Employee.byuId', 'EmployeePayInfo.employeeId')
+  console.log(req.body.column);
+  console.log(req.body.value)
+  knex('EmployeeSemesterPositionLink')
+      .join('Employee', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId')
+      .join('EmployeePayInfo', 'Employee.byuId', 'EmployeePayInfo.employeeId')
   .where('byuId', req.body.byuId)
   .update({
     [req.body.column]: req.body.value
