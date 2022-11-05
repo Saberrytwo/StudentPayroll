@@ -96,3 +96,39 @@ app.post('/update-row', (req, res) => {
 app.listen(port, () => {
   console.log(`App listening on port ${port}`)
 })
+
+app.post('/add-employee-data', async (req, res) => {
+  knex('Employee')
+  .insert({
+    byuId: req.body.byuId,
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    isInternational: req.body.isInternational,
+    gender: req.body.gender,
+    byuName: req.body.byuName,
+    email: req.body.email,
+    expectedHours: req.body.expectedHours,
+    phone: req.body.phone,
+    hireDate: req.body.hireDate,
+    nameChangeCompleted: req.body.nameChangeCompleted,
+    isPayingGradTuition: req.body.isPayingGradTuition,
+    notes: req.body.notes,
+    terminationDate: req.body.terminationDate
+  })
+  .then(blah => {
+    res.redirect("/get-table-data")
+  })
+
+  // knex('EmployeeSemesterPositionLink')
+  // .insert({
+  //   employeeId: req.body.byuId,
+  //   semesterId: req.body.semesterId,
+  //   positionId: req.body.positionId,
+  //   year: req.body.year,
+
+  // })
+  // .then( blah => {
+  //   res.redirect("/get-table-data")
+  // })
+
+})
