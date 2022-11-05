@@ -31,15 +31,20 @@ app.get('/get-table-data', async (req, res) => {
   const positions = await knex('Position');
   const years = await knex('EmployeeSemesterPositionLink').distinct().pluck('year');
 
+  console.log(req.query)
+
   var supervisorsWithEmployees = await Promise.all(supervisors.map(async el => {
     return knex('EmployeeSemesterPositionLink')
       .join('Position', 'Position.id', 'EmployeeSemesterPositionLink.positionId')
       .join('Employee', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId')
       .join('EmployeePayInfo', 'Employee.byuId', 'EmployeePayInfo.employeeId')
       .join('Semester', 'Semester.id', 'EmployeeSemesterPositionLink.semesterId')
-      .where('supervisorId', el.id).then(employees => {
+      .where('supervisorId', el.id)
+      .where('semester', req.query.semester)
+      .where('year', req.query.year).then(employees => {
       return {
         supervisor: {
+          id: el.id,
           firstName: el.firstName,
           lastName: el.lastName
         },
