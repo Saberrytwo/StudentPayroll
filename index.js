@@ -149,6 +149,60 @@ app.get('/get-report-data', async (req, res) => {
   res.send(reportsData);
 });
 
+app.get('/employee-supervisor-csv/:supervisorId', async (req, res) => {
+  var jobs = await knex('EmployeeSemesterPositionLink')
+  .join('Employee', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId')
+  .join('EmployeePayInfo', 'EmployeeSemesterPositionLink.payRateId', 'EmployeePayInfo.id')
+  .join('Position', 'Position.id', 'EmployeeSemesterPositionLink.positionId')
+  .join('Semester', 'Semester.id', 'EmployeeSemesterPositionLink.semesterId')
+  .where('supervisorId', req.params.supervisorId)
+
+  var csvData = [];
+
+  csvData.push(['byuId', 'firstName', 'lastName', 'position', 'semester', 'year', 'email', 'phone', 'gender', 'byuName', 'nameChangeCompleted', 'isInternational', 'isPayingGradTuition', 'notes', 'hireDate', 'expectedHours', 'employeeRecordNumber', 'payRate', 'lastPayIncrease', 'increaseInputDate', 'qualtricsSurveySent', 'isEFormSubmitted', 'eFormSubmissionDate', 'isWorkAuthorizationReceived', 'authorizedToWorkEmailDate', 'terminationDate']);
+  jobs.forEach(el => {
+    csvData.push([el.byuId, el.firstName, el.lastName, el.position, el.semester, el.year, el.email, el.phone, el.gender, el.byuName, el.nameChangeCompleted, el.isInternational, el.isPayingGradTuition, el.notes, el.hireDate, el.expectedHours, el.employeeRecordNumber, el.payRate, el.lastPayIncrease, el.increaseInputDate, el.qualtricsSurveySent, el.isEFormSubmitted, el.eFormSubmissionDate, el.isWorkAuthorizationReceived, el.authorizedToWorkEmailDate, el.terminationDate])
+  });
+
+  res.send({data: csvData});
+});
+
+app.get('/semester-csv', async (req, res) => {
+  var jobs = await knex('EmployeeSemesterPositionLink')
+  .join('Employee', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId')
+  .join('EmployeePayInfo', 'EmployeeSemesterPositionLink.payRateId', 'EmployeePayInfo.id')
+  .join('Position', 'Position.id', 'EmployeeSemesterPositionLink.positionId')
+  .join('Semester', 'Semester.id', 'EmployeeSemesterPositionLink.semesterId')
+  .where('semester', 'Fall')
+  .where('year', new Date().getFullYear())
+
+  var csvData = [];
+
+  csvData.push(['byuId', 'firstName', 'lastName', 'position', 'semester', 'year', 'email', 'phone', 'gender', 'byuName', 'nameChangeCompleted', 'isInternational', 'isPayingGradTuition', 'notes', 'hireDate', 'expectedHours', 'employeeRecordNumber', 'payRate', 'lastPayIncrease', 'increaseInputDate', 'qualtricsSurveySent', 'isEFormSubmitted', 'eFormSubmissionDate', 'isWorkAuthorizationReceived', 'authorizedToWorkEmailDate', 'terminationDate']);
+  jobs.forEach(el => {
+    csvData.push([el.byuId, el.firstName, el.lastName, el.position, el.semester, el.year, el.email, el.phone, el.gender, el.byuName, el.nameChangeCompleted, el.isInternational, el.isPayingGradTuition, el.notes, el.hireDate, el.expectedHours, el.employeeRecordNumber, el.payRate, el.lastPayIncrease, el.increaseInputDate, el.qualtricsSurveySent, el.isEFormSubmitted, el.eFormSubmissionDate, el.isWorkAuthorizationReceived, el.authorizedToWorkEmailDate, el.terminationDate])
+  });
+
+  res.send({data: csvData});
+});
+
+app.get('/all-employee-csv', async (req, res) => {
+  var jobs = await knex('EmployeeSemesterPositionLink')
+  .join('Employee', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId')
+  .join('EmployeePayInfo', 'EmployeeSemesterPositionLink.payRateId', 'EmployeePayInfo.id')
+  .join('Position', 'Position.id', 'EmployeeSemesterPositionLink.positionId')
+  .join('Semester', 'Semester.id', 'EmployeeSemesterPositionLink.semesterId')
+
+  var csvData = [];
+
+  csvData.push(['byuId', 'firstName', 'lastName', 'position', 'semester', 'year', 'email', 'phone', 'gender', 'byuName', 'nameChangeCompleted', 'isInternational', 'isPayingGradTuition', 'notes', 'hireDate', 'expectedHours', 'employeeRecordNumber', 'payRate', 'lastPayIncrease', 'increaseInputDate', 'qualtricsSurveySent', 'isEFormSubmitted', 'eFormSubmissionDate', 'isWorkAuthorizationReceived', 'authorizedToWorkEmailDate', 'terminationDate']);
+  jobs.forEach(el => {
+    csvData.push([el.byuId, el.firstName, el.lastName, el.position, el.semester, el.year, el.email, el.phone, el.gender, el.byuName, el.nameChangeCompleted, el.isInternational, el.isPayingGradTuition, el.notes, el.hireDate, el.expectedHours, el.employeeRecordNumber, el.payRate, el.lastPayIncrease, el.increaseInputDate, el.qualtricsSurveySent, el.isEFormSubmitted, el.eFormSubmissionDate, el.isWorkAuthorizationReceived, el.authorizedToWorkEmailDate, el.terminationDate])
+  });
+
+  res.send({data: csvData});
+});
+
 app.post('/update-row', (req, res) => {
   knex('EmployeeSemesterPositionLink')
       .join('Employee', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId')
