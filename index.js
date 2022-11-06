@@ -152,7 +152,7 @@ app.get('/get-report-data', async (req, res) => {
 app.post('/update-row', (req, res) => {
   knex('EmployeeSemesterPositionLink')
       .join('Employee', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId')
-      .join('EmployeePayInfo', 'Employee.byuId', 'EmployeePayInfo.employeeId')
+      .join('EmployeePayInfo', 'EmployeeSemesterPositionLink.payRateId', 'EmployeePayInfo.id')
   .where('byuId', req.body.byuId)
   .update({
     [req.body.column]: req.body.value
@@ -176,6 +176,7 @@ app.post('/add-employee-data', async (req, res) => {
     nameChangeCompleted: req.body.nameChangeCompleted,
     isPayingGradTuition: req.body.isPayingGradTuition,
     notes: req.body.notes,
+    employeeRecordNumber: 0
   })
   .then(response => {
     knex('EmployeePayInfo')
