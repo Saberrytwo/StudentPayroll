@@ -31,13 +31,11 @@ app.get('/get-table-data', async (req, res) => {
   const positions = await knex('Position');
   const years = await knex('EmployeeSemesterPositionLink').distinct().pluck('year');
 
-  console.log(req.query)
-
   var supervisorsWithEmployees = await Promise.all(supervisors.map(async el => {
     return knex('EmployeeSemesterPositionLink')
       .join('Position', 'Position.id', 'EmployeeSemesterPositionLink.positionId')
       .join('Employee', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId')
-      .join('EmployeePayInfo', 'Employee.byuId', 'EmployeePayInfo.employeeId')
+      .join('EmployeePayInfo', 'EmployeeSemesterPositionLink.payRateId', 'EmployeePayInfo.id')
       .join('Semester', 'Semester.id', 'EmployeeSemesterPositionLink.semesterId')
       .where('supervisorId', el.id)
       .where('semester', req.query.semester)
@@ -62,19 +60,89 @@ app.get('/get-table-data', async (req, res) => {
     supervisors: supervisorsWithEmployees 
   }
 
-  console.log(response)
   res.send(response);
 });
 
 app.get('/get-report-data', async (req, res) => {
-  const employees = await knex('Employee').join('EmployeeSemesterPositionLink', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId');
+  const employees = await knex('Employee')
+    .join('EmployeeSemesterPositionLink', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId');
   const taCount = employees.filter(emp => emp.position === 1).length;
   const raCount = employees.filter(emp => emp.position === 2).length;
+  
+  const positions = await knex('Position');
+  const genders = await knex('Employee').distinct().pluck('gender');
+
+  const overallWageAvg = await knex('EmployeePayInfo').avg('payRate as avg');
+  const positionalAvg = await Promise.all(positions.map(async pos => {
+    const avg = await knex('EmployeePayInfo').join('EmployeeSemesterPositionLink', 'EmployeeSemesterPositionLink.payRateId', 'EmployeePayInfo.id').avg('payRate as avg').where('positionId', pos.id)
+
+    return ({[pos.position]: avg[0].avg})
+  }));
+
+  const overallCount= employees.length;
+  const positionalCount = await Promise.all(positions.map(async pos => {
+    const count = await knex('Employee').join('EmployeeSemesterPositionLink', 'EmployeeSemesterPositionLink.employeeId', 'Employee.byuId').count().where('positionId', pos.id)
+
+    return ({[pos.position]: count[0]['count(*)']})
+  }));
+
+  const genderRatioDatasets = genders.map(gender => {
+    return {
+      label: gender,
+      data: positions.map(pos => employees.filter(emp => emp.position == pos.id && emp.gender == gender)).length,
+      backgroundColor: gender == 'female' ? 'rgba(255, 99, 132, 0.5)' : gender == 'male' ? 'rgba(53, 162, 235, 0.5)' : 'rgba(133, 133, 133, 0.75)',
+    }
+  })
 
   const reportsData = {
-    barChart: {
-      taCount: taCount,
-      raCount: raCount
+    wageData: {
+      overallAvg: overallWageAvg[0].avg,
+      positionalAvg: positionalAvg
+    },
+    employeeCountData: {
+      overallCount: overallCount,
+      positionalCount: positionalCount
+    },
+    taRaData: {
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: false
+          },
+          title: {
+            display: true,
+            text: 'TA vs RA',
+          },
+        },
+      },
+      data: {
+        labels: ['TA\'s', 'RA\'s'],
+        datasets: [
+          {
+            data: [taCount, raCount],
+            backgroundColor: 'rgba(39, 245, 159, 0.5)',
+          }
+        ]
+      }
+    },
+    genderRatioData: {
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            display: false
+          },
+          title: {
+            display: true,
+            text: 'Gender Ratio',
+          },
+        },
+      },
+      data: {
+        labels: positions.map(pos => pos.position),
+        datasets: genderRatioDatasets
+      }
     }
   }
 
@@ -82,8 +150,6 @@ app.get('/get-report-data', async (req, res) => {
 });
 
 app.post('/update-row', (req, res) => {
-  console.log(req.body.column);
-  console.log(req.body.value)
   knex('EmployeeSemesterPositionLink')
       .join('Employee', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId')
       .join('EmployeePayInfo', 'Employee.byuId', 'EmployeePayInfo.employeeId')
@@ -93,11 +159,8 @@ app.post('/update-row', (req, res) => {
   }).then(result => { res.status(200); res.send(); })
 });
 
-app.listen(port, () => {
-  console.log(`App listening on port ${port}`)
-})
-
 app.post('/add-employee-data', async (req, res) => {
+  console.log('ADDDING')
   knex('Employee')
   .insert({
     byuId: req.body.byuId,
@@ -113,22 +176,39 @@ app.post('/add-employee-data', async (req, res) => {
     nameChangeCompleted: req.body.nameChangeCompleted,
     isPayingGradTuition: req.body.isPayingGradTuition,
     notes: req.body.notes,
-    terminationDate: req.body.terminationDate
   })
-  .then(blah => {
-    res.redirect("/get-table-data")
+  .then(response => {
+    knex('EmployeePayInfo')
+    .insert({
+      payRate: req.body.payRate
+    }, ['id'])
+    .then(async resp => {
+      var semester = await knex('Semester').where('semester', req.body.semester).pluck('id');
+      knex('EmployeeSemesterPositionLink')
+      .insert({
+        employeeId: req.body.byuId,
+        supervisorId: req.body.supervisorId,
+        semesterId: semester,
+        year: req.body.year,
+        positionId: req.body.position,
+        payRateId: resp[0]
+      }, '').then(response => {
+        res.status(200).send({ 'status': 'ok' });
+      })
+    })
   })
+})
 
-  // knex('EmployeeSemesterPositionLink')
-  // .insert({
-  //   employeeId: req.body.byuId,
-  //   semesterId: req.body.semesterId,
-  //   positionId: req.body.positionId,
-  //   year: req.body.year,
+app.post('/delete/:id', async (req, res) => {
+  knex('EmployeeSemesterPositionLink')
+    .join('Employee', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId')
+    .join('EmployeePayInfo', 'EmployeeSemesterPositionLink.payRateId', 'EmployeePayInfo.id')
+  .where('byuId', req.params['id'])
+  .del().then(result => {
+    res.status(200).send({ 'status': 'ok' });
+  })
+})
 
-  // })
-  // .then( blah => {
-  //   res.redirect("/get-table-data")
-  // })
-
+app.listen(port, () => {
+  console.log(`App listening on port ${port}`)
 })
