@@ -114,8 +114,8 @@ app.get('/get-table-data', async (req, res) => {
 app.get('/get-report-data', async (req, res) => {
   const employees = await knex('Employee')
     .join('EmployeeSemesterPositionLink', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId');
-  const taCount = employees.filter(emp => emp.position === 1).length;
-  const raCount = employees.filter(emp => emp.position === 2).length;
+  const taCount = employees.filter(emp => emp.positionId === 1).length;
+  const raCount = employees.filter(emp => emp.positionId === 2).length;
   
   const positions = await knex('Position');
   const genders = await knex('Employee').distinct().pluck('gender');
@@ -138,8 +138,8 @@ app.get('/get-report-data', async (req, res) => {
   const genderRatioDatasets = genders.map(gender => {
     return {
       label: gender,
-      data: positions.map(pos => employees.filter(emp => emp.position == pos.id && emp.gender == gender)).length,
-      backgroundColor: gender == 'female' ? 'rgba(255, 99, 132, 0.5)' : gender == 'male' ? 'rgba(53, 162, 235, 0.5)' : 'rgba(133, 133, 133, 0.75)',
+      data: positions.map(pos => employees.filter(emp => emp.positionId == pos.id && emp.gender == gender).length),
+      backgroundColor: gender == 'Female' ? 'rgba(255, 99, 132, 0.5)' : gender == 'Male' ? 'rgba(53, 162, 235, 0.5)' : 'rgba(133, 133, 133, 0.75)',
     }
   })
 
