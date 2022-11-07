@@ -19,10 +19,58 @@ const knex = require('knex')({
   }
 });
 
+const getCurrentSemester = () => {
+  const currentMonth = new Date().getMonth();
+
+  const fallMonths = [8, 9, 10, 11]
+  const winterMonths = [0, 1, 2, 3]
+  const springMonths = [4, 5]
+
+  return fallMonths.includes(currentMonth) ? 'Fall' : winterMonths.includes(currentMonth) ? 'Winter' : springMonths.includes(currentMonth) ? 'Spring' : 'Summer'
+}
+
 app.get('/', (req, res) => {
   res.send({
     code: 200,
     health: "Healthy"
+  })
+});
+
+app.get('/notifications', async (req, res) => {
+  const employees = await knex('EmployeeSemesterPositionLink')
+    .join('Position', 'Position.id', 'EmployeeSemesterPositionLink.positionId')
+    .join('Employee', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId')
+    .join('Semester', 'Semester.id', 'EmployeeSemesterPositionLink.semesterId')
+    .where('semester', getCurrentSemester())
+    .where('year', new Date().getFullYear());
+
+  const supervisors = await knex('Supervisor');
+
+  const authorizedToWorkNotifications = await Promise.all(employees
+    .filter(emp => new Date(emp.dateAdded) < (new Date().getTime() - (7 * 24 * 60 * 60 * 1000)))
+    .map(emp => {
+      const supervisor = supervisors.filter(sup => sup.id == emp.supervisorId).map(sup => `${sup.firstName} ${sup.lastName}`)
+      return {
+        name: `${emp.firstName} ${emp.lastName}`,
+        position: emp.position,
+        dateAdded: emp.dateAdded,
+        supervisor: supervisor
+      }
+    }));
+
+  const eFormNotifications = await Promise.all(employees.filter(emp => emp.qualtricsSurveySent && !emp.isEFormSubmitted)
+    .map(emp => {
+      const supervisor = supervisors.filter(sup => sup.id == emp.supervisorId).map(sup => `${sup.firstName} ${sup.lastName}`)
+      return {
+        name: `${emp.firstName} ${emp.lastName}`,
+        position: emp.position,
+        supervisor: supervisor
+      }
+    }));
+
+  res.send({
+    authorizedToWorkNotifications,
+    eFormNotifications
   })
 });
 
@@ -71,6 +119,7 @@ app.get('/get-report-data', async (req, res) => {
   
   const positions = await knex('Position');
   const genders = await knex('Employee').distinct().pluck('gender');
+  const supervisors = await knex('Supervisor');
 
   const overallWageAvg = await knex('EmployeePayInfo').avg('payRate as avg');
   const positionalAvg = await Promise.all(positions.map(async pos => {
@@ -103,6 +152,7 @@ app.get('/get-report-data', async (req, res) => {
       overallCount: overallCount,
       positionalCount: positionalCount
     },
+    supervisors: supervisors,
     taRaData: {
       options: {
         responsive: true,
@@ -173,7 +223,7 @@ app.get('/semester-csv', async (req, res) => {
   .join('EmployeePayInfo', 'EmployeeSemesterPositionLink.payRateId', 'EmployeePayInfo.id')
   .join('Position', 'Position.id', 'EmployeeSemesterPositionLink.positionId')
   .join('Semester', 'Semester.id', 'EmployeeSemesterPositionLink.semesterId')
-  .where('semester', 'Fall')
+  .where('semester', getCurrentSemester())
   .where('year', new Date().getFullYear())
 
   var csvData = [];
@@ -210,7 +260,10 @@ app.post('/update-row', (req, res) => {
   .where('byuId', req.body.byuId)
   .update({
     [req.body.column]: req.body.value
-  }).then(result => { res.status(200); res.send(); })
+  }).then(async result => { 
+
+    res.status(200); res.send(); 
+  })
 });
 
 app.post('/add-employee-data', async (req, res) => {
@@ -246,7 +299,8 @@ app.post('/add-employee-data', async (req, res) => {
         semesterId: semester,
         year: req.body.year,
         positionId: req.body.position,
-        payRateId: resp[0]
+        payRateId: resp[0],
+        dateAdded: new Date().toISOString().split('T')[0]
       }, '').then(response => {
         res.status(200).send({ 'status': 'ok' });
       })
