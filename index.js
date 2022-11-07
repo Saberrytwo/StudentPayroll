@@ -36,6 +36,12 @@ app.get('/', (req, res) => {
   })
 });
 
+app.get('/supervisors', async (req, res) => {
+  const supervisors = await knex('Supervisor');
+
+  res.send(supervisors)
+})
+
 app.get('/notifications', async (req, res) => {
   const employees = await knex('EmployeeSemesterPositionLink')
     .join('Position', 'Position.id', 'EmployeeSemesterPositionLink.positionId')
@@ -99,13 +105,18 @@ app.get('/get-table-data', async (req, res) => {
     })
   }));
 
+  const linkingTable = await knex('EmployeeSemesterPositionLink').join('Semester', 'Semester.id', 'EmployeeSemesterPositionLink.semesterId').where('semester', req.query.semester).where('year', req.query.year)
+
+  console.log(linkingTable)
+
   const response = 
   { 
     positions: positions, 
     years: years.sort(function(a, b) {
     return b - a;
     }), 
-    supervisors: supervisorsWithEmployees 
+    supervisors: supervisorsWithEmployees,
+    noEmployees: !linkingTable.length
   }
 
   res.send(response);
@@ -292,6 +303,7 @@ app.post('/add-employee-data', async (req, res) => {
     }, ['id'])
     .then(async resp => {
       var semester = await knex('Semester').where('semester', req.body.semester).pluck('id');
+      console.log(`Supervisor Id: ${req.body.supervisorId}`)
       knex('EmployeeSemesterPositionLink')
       .insert({
         employeeId: req.body.byuId,
