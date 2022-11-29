@@ -2,13 +2,13 @@ version: 0.0
 os: linux
 files:
   - source: /index.js
-    destination: /var/www/html/ 
+    destination: /var/www/backend/ 
   - source: /package.json
-    destination: /var/www/html/   
+    destination: /var/www/backend/   
   - source: /package-lock.json
-    destination: /var/www/html/    
+    destination: /var/www/backend/    
   - source: /node_modules
-    destination: /var/www/html/node_modules_backend
+    destination: /var/www/backend/node_modules_backend
 
 
 hooks:
