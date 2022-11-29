@@ -8,7 +8,7 @@ files:
   - source: /package-lock.json
     destination: /var/www/backend/    
   - source: /node_modules
-    destination: /var/www/backend/node_modules_backend
+    destination: /var/www/backend/node_modules
 
 
 hooks:
