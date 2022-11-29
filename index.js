@@ -11,10 +11,10 @@ app.use(bodyParser.json());
 const knex = require('knex')({
   client: 'mysql2',
   connection: {
-    host : 'classproject.cluster-cbdo9oytyewz.us-east-2.rds.amazonaws.com',
+    host: 'finalproject-db.cluster-cbdo9oytyewz.us-east-2.rds.amazonaws.com',
     port : 3306,
     user : 'admin',
-    password : 'admin123',
+    password : 'Password!234',
     database : 'studentemploymentdb'
   }
 });
