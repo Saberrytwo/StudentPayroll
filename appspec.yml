@@ -1,0 +1,23 @@
+version: 0.0
+os: linux
+files:
+  - source: /index.js
+    destination: /var/www/html/ 
+  - source: /package.json
+    destination: /var/www/html/   
+  - source: /package-lock.json
+    destination: /var/www/html/    
+  - source: /node_modules
+    destination: /var/www/html/node_modules
+
+
+hooks:
+  BeforeInstall:
+    - location: scripts/start_server
+      timeout: 300
+      runas: root
+  ApplicationStop:
+    - location: scripts/stop_server
+      timeout: 300
+      runas: root
+

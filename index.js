@@ -1,20 +1,30 @@
+// const https = require('https');
+// const fs = require('fs');
+// const https_options = {
+//  ca: fs.readFileSync("ca_bundle.crt"),
+//  key: fs.readFileSync("private.key"),
+//  cert: fs.readFileSync("certificate.crt")
+// };
 const express = require('express')
 const cors = require('cors')
 const bodyParser = require("body-parser");
 const app = express()
 const port = 3001
 
-app.use(cors());
+
+// app.use(cors());
+// const cors = require('cors');  
+app.use(cors({credentials: true, origin: 'http://52.15.82.23/'}));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 const knex = require('knex')({
   client: 'mysql2',
   connection: {
-    host : 'classproject.cluster-cbdo9oytyewz.us-east-2.rds.amazonaws.com',
+    host: 'finalproject-db.cluster-cbdo9oytyewz.us-east-2.rds.amazonaws.com',
     port : 3306,
     user : 'admin',
-    password : 'admin123',
+    password : 'Password!234',
     database : 'studentemploymentdb'
   }
 });
@@ -30,10 +40,9 @@ const getCurrentSemester = () => {
 }
 
 app.get('/', (req, res) => {
-  res.send({
-    code: 200,
-    health: "Healthy"
-  })
+  res.send(
+    '<p>some html</p>'
+  )
 });
 
 app.get('/supervisors', async (req, res) => {
@@ -333,3 +342,7 @@ app.post('/delete/:id', async (req, res) => {
 app.listen(port, () => {
   console.log(`App listening on port ${port}`)
 })
+// https.createServer(https_options, app).listen(port,() => {
+//   console.log('Server listening on port ' + port);
+// });
+
