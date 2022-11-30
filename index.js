@@ -37,10 +37,11 @@ const getCurrentSemester = () => {
 }
 
 app.get('/', (req, res) => {
-  res.send({
-    code: 200,
-    health: "Healthy"
-  })
+  res.send(//{
+    // code: 200,
+    // health: "Healthy",
+    '<p>some html</p>'
+  )
 });
 
 app.get('/notifications', async (req, res) => {
