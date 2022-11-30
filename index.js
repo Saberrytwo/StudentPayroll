@@ -1,20 +1,10 @@
-// const https = require('https');
-// const fs = require('fs');
-// const https_options = {
-//  ca: fs.readFileSync("ca_bundle.crt"),
-//  key: fs.readFileSync("private.key"),
-//  cert: fs.readFileSync("certificate.crt")
-// };
 const express = require('express')
 const cors = require('cors')
 const bodyParser = require("body-parser");
 const app = express()
 const port = 3001
 
-
-// app.use(cors());
-// const cors = require('cors');  
-app.use(cors({credentials: true, origin: 'http://52.15.82.23/'}));
+app.use(cors({credentials: true, origin: 'http://localhost:3000'}));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
@@ -115,8 +105,6 @@ app.get('/get-table-data', async (req, res) => {
   }));
 
   const linkingTable = await knex('EmployeeSemesterPositionLink').join('Semester', 'Semester.id', 'EmployeeSemesterPositionLink.semesterId').where('semester', req.query.semester).where('year', req.query.year)
-
-  console.log(linkingTable)
 
   const response = 
   { 
@@ -287,7 +275,6 @@ app.post('/update-row', (req, res) => {
 });
 
 app.post('/add-employee-data', async (req, res) => {
-  console.log('ADDDING')
   knex('Employee')
   .insert({
     byuId: req.body.byuId,
@@ -312,7 +299,6 @@ app.post('/add-employee-data', async (req, res) => {
     }, ['id'])
     .then(async resp => {
       var semester = await knex('Semester').where('semester', req.body.semester).pluck('id');
-      console.log(`Supervisor Id: ${req.body.supervisorId}`)
       knex('EmployeeSemesterPositionLink')
       .insert({
         employeeId: req.body.byuId,
