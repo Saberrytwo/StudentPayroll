@@ -9,7 +9,8 @@ const express = require('express')
 const cors = require('cors')
 const bodyParser = require("body-parser");
 const app = express()
-const port = 3000
+const port = 3001
+
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -37,11 +38,10 @@ const getCurrentSemester = () => {
 }
 
 app.get('/', (req, res) => {
-  res.send(//{
-    // code: 200,
-    // health: "Healthy",
-    '<p>some html</p>'
-  )
+  res.send({
+    code: 200,
+    health: "Healthy"
+  })
 });
 
 app.get('/notifications', async (req, res) => {
@@ -326,10 +326,10 @@ app.post('/delete/:id', async (req, res) => {
   })
 })
 
-// app.listen(port, () => {
-//   console.log(`App listening on port ${port}`)
-// })
-https.createServer(https_options, app).listen(port,() => {
-  console.log('Server listening on port ' + port);
-});
+app.listen(port, () => {
+  console.log(`App listening on port ${port}`)
+})
+// https.createServer(https_options, app).listen(port,() => {
+//   console.log('Server listening on port ' + port);
+// });
 
