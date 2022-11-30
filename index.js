@@ -1,6 +1,4 @@
 // Import builtin NodeJS modules to instantiate the service
-const https = require("https");
-const fs = request("fs");
 const express = require('express')
 const cors = require('cors')
 const bodyParser = require("body-parser");
@@ -321,17 +319,7 @@ app.post('/delete/:id', async (req, res) => {
   })
 })
 
-// app.listen(port, () => {
-//   console.log(`App listening on port ${port}`)
-// })
-https.createServer(
-  {
-    key: fs.readFileSync("key.pem"),
-    cert: fs.readFileSync("cert.pem"),
-  },
-  app
-  )
-.listen(3001, ()=>{
-  console.log('server is runing at port 3001')
-});
+app.listen(port, () => {
+  console.log(`App listening on port ${port}`)
+})
 
