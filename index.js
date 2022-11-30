@@ -1,10 +1,10 @@
-const https = require('https');
-const fs = require('fs');
-const https_options = {
- ca: fs.readFileSync("ca_bundle.crt"),
- key: fs.readFileSync("private.key"),
- cert: fs.readFileSync("certificate.crt")
-};
+// const https = require('https');
+// const fs = require('fs');
+// const https_options = {
+//  ca: fs.readFileSync("ca_bundle.crt"),
+//  key: fs.readFileSync("private.key"),
+//  cert: fs.readFileSync("certificate.crt")
+// };
 const express = require('express')
 const cors = require('cors')
 const bodyParser = require("body-parser");
