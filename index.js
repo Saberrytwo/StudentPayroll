@@ -1,9 +1,20 @@
-// Import builtin NodeJS modules to instantiate the service
+const https = require('https');
+const fs = require('fs');
+const https_options = {
+ ca: fs.readFileSync("ca_bundle.crt"),
+ key: fs.readFileSync("private.key"),
+ cert: fs.readFileSync("certificate.crt")
+};
 const express = require('express')
 const cors = require('cors')
 const bodyParser = require("body-parser");
 const app = express()
 const port = 3001
+
+const options = {
+  key: fs.readFileSync("server.key"),
+  cert: fs.readFileSync("server.cert"),
+  };
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -319,7 +330,11 @@ app.post('/delete/:id', async (req, res) => {
   })
 })
 
-app.listen(port, () => {
-  console.log(`App listening on port ${port}`)
-})
+// app.listen(port, () => {
+//   console.log(`App listening on port ${port}`)
+// })
+https.createServer(https_options, function (req, res) {
+  res.writeHead(200);
+  res.end("Welcome to Node.js HTTPS Server");
+ }).listen(port)
 
