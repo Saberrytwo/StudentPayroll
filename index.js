@@ -11,11 +11,6 @@ const bodyParser = require("body-parser");
 const app = express()
 const port = 3001
 
-const options = {
-  key: fs.readFileSync("server.key"),
-  cert: fs.readFileSync("server.cert"),
-  };
-
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
