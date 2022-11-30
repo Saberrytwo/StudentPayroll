@@ -12,7 +12,9 @@ const app = express()
 const port = 3001
 
 
-app.use(cors());
+// app.use(cors());
+// const cors = require('cors');  
+app.use(cors({credentials: true, origin: 'https://531.solomonberry.fun/'}));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
