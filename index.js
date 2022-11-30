@@ -44,6 +44,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/notifications', async (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*");
   const employees = await knex('EmployeeSemesterPositionLink')
     .join('Position', 'Position.id', 'EmployeeSemesterPositionLink.positionId')
     .join('Employee', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId')
@@ -82,11 +83,13 @@ app.get('/notifications', async (req, res) => {
 });
 
 app.get('/get-table-data', async (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*");
   const supervisors = await knex('Supervisor');
   const positions = await knex('Position');
   const years = await knex('EmployeeSemesterPositionLink').distinct().pluck('year');
 
   var supervisorsWithEmployees = await Promise.all(supervisors.map(async el => {
+    res.header("Access-Control-Allow-Origin", "*");
     return knex('EmployeeSemesterPositionLink')
       .join('Position', 'Position.id', 'EmployeeSemesterPositionLink.positionId')
       .join('Employee', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId')
@@ -119,6 +122,7 @@ app.get('/get-table-data', async (req, res) => {
 });
 
 app.get('/get-report-data', async (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*");
   const employees = await knex('Employee')
     .join('EmployeeSemesterPositionLink', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId');
   const taCount = employees.filter(emp => emp.positionId === 1).length;
@@ -274,6 +278,7 @@ app.post('/update-row', (req, res) => {
 });
 
 app.post('/add-employee-data', async (req, res) => {
+  res.header("Access-Control-Allow-Origin", "*");
   console.log('ADDDING')
   knex('Employee')
   .insert({
