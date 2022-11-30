@@ -333,8 +333,7 @@ app.post('/delete/:id', async (req, res) => {
 // app.listen(port, () => {
 //   console.log(`App listening on port ${port}`)
 // })
-https.createServer(https_options, function (req, res) {
-  res.writeHead(200);
-  res.end("Welcome to Node.js HTTPS Server");
- }).listen(port)
+https.createServer(https_options, app).listen(port,() => {
+  console.log('Server listening on port ' + port);
+});
 
