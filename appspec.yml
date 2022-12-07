@@ -7,8 +7,6 @@ files:
     destination: /var/www/html/   
   - source: /package-lock.json
     destination: /var/www/html/    
-  - source: /node_modules
-    destination: /var/www/html/node_modules
 
 
 hooks:
