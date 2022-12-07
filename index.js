@@ -1,19 +1,41 @@
-// const https = require('https');
-// const fs = require('fs');
-// const https_options = {
-//  ca: fs.readFileSync("ca_bundle.crt"),
-//  key: fs.readFileSync("private.key"),
-//  cert: fs.readFileSync("certificate.crt")
-// };
 const express = require('express')
 const cors = require('cors')
 const bodyParser = require("body-parser");
 const app = express()
 const port = 3001
+const sha256 = require('sha256');
+var nodemailer = require('nodemailer');
 
+var transporter = nodemailer.createTransport({
+  host: "smtp-mail.outlook.com", // hostname
+  secureConnection: false, // TLS requires secureConnection to be false
+  port: 587, // port for secure SMTP
+  tls: {
+     ciphers:'SSLv3'
+  },
+  auth: {
+      user: 'is405classproject@outlook.com',
+      pass: 'blahprojectfun1234'
+  }
+});
 
-// app.use(cors());
-// const cors = require('cors');  
+// var mailOptions = {
+//   from: '"Our Code World " <mymail@outlook.com>', // sender address (who sends)
+//   to: 'mymail@mail.com, mymail2@mail.com', // list of receivers (who receives)
+//   subject: 'Hello ', // Subject line
+//   text: 'Hello world ', // plaintext body
+//   html: '<b>Hello world </b><br> This is the first email sent with Nodemailer in Node.js' // html body
+// };
+
+// // send mail with defined transport object
+// transporter.sendMail(mailOptions, function(error, info){
+//   if(error){
+//       return console.log(error);
+//   }
+
+//   console.log('Message sent: ' + info.response);
+// });
+
 app.use(cors({credentials: true, origin: 'http://52.15.82.23/'}));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -44,6 +66,23 @@ app.get('/', (req, res) => {
     '<p>some html</p>'
   )
 });
+
+app.post('/login', async (req,res) => {
+  var date = new Date().toISOString().split("T")[0];
+  var token = "";
+  const user = await knex('Login')
+    .where('username', req.body.username);
+  if (user[0].password == req.body.password){
+    token = sha256(date + "isemp" + req.body.username);
+    res.send({token:token});
+  }
+});
+
+app.get('/supervisors', async (req, res) => {
+  const supervisors = await knex('Supervisor');
+
+  res.redirect(supervisors)
+})
 
 app.get('/notifications', async (req, res) => {
   const employees = await knex('EmployeeSemesterPositionLink')
@@ -108,13 +147,16 @@ app.get('/get-table-data', async (req, res) => {
     })
   }));
 
+  const linkingTable = await knex('EmployeeSemesterPositionLink').join('Semester', 'Semester.id', 'EmployeeSemesterPositionLink.semesterId').where('semester', req.query.semester).where('year', req.query.year)
+
   const response = 
   { 
     positions: positions, 
     years: years.sort(function(a, b) {
     return b - a;
     }), 
-    supervisors: supervisorsWithEmployees 
+    supervisors: supervisorsWithEmployees,
+    noEmployees: !linkingTable.length
   }
 
   res.send(response);
@@ -262,6 +304,50 @@ app.get('/all-employee-csv', async (req, res) => {
   res.send({data: csvData});
 });
 
+app.get('/reminder-data', async (req, res) => {
+  const work_auth = await knex('Reminders').where('reminder_type', 'work_auth');
+  const eform = await knex('Reminders').where('reminder_type', 'e-form');
+  
+  res.send({
+    work_auth: work_auth[0].num_days,
+    eform: eform[0].num_days
+  })
+})
+
+app.get('/email', (req, res) => {
+  knex('Email')
+    .where('email_name', 'work-approval')
+    .then(resp => {
+      res.send(resp);
+    })
+})
+
+app.post('/update-email', (req, res) => {
+  knex('Email')
+    .where('email_name', 'work-approval')
+    .update({
+      'content': req.body.content
+    }).then(resp => {
+      res.status(200); res.send();
+    })
+})
+
+app.post('/update-work-auth', async (req, res) => {
+  await knex('Reminders')
+    .where('reminder_type', 'work_auth')
+    .update('num_days', req.body.work_auth);
+
+  res.status(200); res.send();
+})
+
+app.post('/update-e-form', async (req, res) => {
+  await knex('Reminders')
+    .where('reminder_type', 'e-form')
+    .update('num_days', req.body.eform);
+
+  res.status(200); res.send();
+})
+
 app.post('/update-row', (req, res) => {
   knex('EmployeeSemesterPositionLink')
       .join('Employee', 'Employee.byuId', 'EmployeeSemesterPositionLink.employeeId')
@@ -276,7 +362,6 @@ app.post('/update-row', (req, res) => {
 });
 
 app.post('/add-employee-data', async (req, res) => {
-  console.log('ADDDING')
   knex('Employee')
   .insert({
     byuId: req.body.byuId,
