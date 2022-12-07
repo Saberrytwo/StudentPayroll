@@ -36,7 +36,7 @@ var transporter = nodemailer.createTransport({
 //   console.log('Message sent: ' + info.response);
 // });
 
-app.use(cors({credentials: true, origin: 'http://localhost:3000'}));
+app.use(cors({credentials: true, origin: 'http://52.15.82.23/'}));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
