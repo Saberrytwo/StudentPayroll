@@ -43,7 +43,6 @@ app.post('/login', async (req,res) => {
     .where('username', req.body.username);
   if (user[0].password == req.body.password){
     token = sha256(date + "isemp" + req.body.username);
-    console.log(token);
     res.send({token:token});
   }
 });
