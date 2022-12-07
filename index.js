@@ -37,13 +37,10 @@ app.get('/', (req, res) => {
 });
 
 app.post('/login', async (req,res) => {
-  console.log(req.body.username);
-  console.log(req.body.password);
   var date = new Date().toISOString().split("T")[0];
   var token = "";
   const user = await knex('Login')
     .where('username', req.body.username);
-    console.log(user);
   if (user[0].password == req.body.password){
     token = sha256(date + "isemp" + req.body.username);
     console.log(token);
