@@ -4,6 +4,37 @@ const bodyParser = require("body-parser");
 const app = express()
 const port = 3001
 const sha256 = require('sha256');
+var nodemailer = require('nodemailer');
+
+var transporter = nodemailer.createTransport({
+  host: "smtp-mail.outlook.com", // hostname
+  secureConnection: false, // TLS requires secureConnection to be false
+  port: 587, // port for secure SMTP
+  tls: {
+     ciphers:'SSLv3'
+  },
+  auth: {
+      user: 'is405classproject@outlook.com',
+      pass: 'blahprojectfun1234'
+  }
+});
+
+// var mailOptions = {
+//   from: '"Our Code World " <mymail@outlook.com>', // sender address (who sends)
+//   to: 'mymail@mail.com, mymail2@mail.com', // list of receivers (who receives)
+//   subject: 'Hello ', // Subject line
+//   text: 'Hello world ', // plaintext body
+//   html: '<b>Hello world </b><br> This is the first email sent with Nodemailer in Node.js' // html body
+// };
+
+// // send mail with defined transport object
+// transporter.sendMail(mailOptions, function(error, info){
+//   if(error){
+//       return console.log(error);
+//   }
+
+//   console.log('Message sent: ' + info.response);
+// });
 
 app.use(cors({credentials: true, origin: 'http://localhost:3000'}));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -276,6 +307,50 @@ app.get('/all-employee-csv', async (req, res) => {
 
   res.send({data: csvData});
 });
+
+app.get('/reminder-data', async (req, res) => {
+  const work_auth = await knex('Reminders').where('reminder_type', 'work_auth');
+  const eform = await knex('Reminders').where('reminder_type', 'e-form');
+  
+  res.send({
+    work_auth: work_auth[0].num_days,
+    eform: eform[0].num_days
+  })
+})
+
+app.get('/email', (req, res) => {
+  knex('Email')
+    .where('email_name', 'work-approval')
+    .then(resp => {
+      res.send(resp);
+    })
+})
+
+app.post('/update-email', (req, res) => {
+  knex('Email')
+    .where('email_name', 'work-approval')
+    .update({
+      'content': req.body.content
+    }).then(resp => {
+      res.status(200); res.send();
+    })
+})
+
+app.post('/update-work-auth', async (req, res) => {
+  await knex('Reminders')
+    .where('reminder_type', 'work_auth')
+    .update('num_days', req.body.work_auth);
+
+  res.status(200); res.send();
+})
+
+app.post('/update-e-form', async (req, res) => {
+  await knex('Reminders')
+    .where('reminder_type', 'e-form')
+    .update('num_days', req.body.eform);
+
+  res.status(200); res.send();
+})
 
 app.post('/update-row', (req, res) => {
   knex('EmployeeSemesterPositionLink')
