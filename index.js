@@ -3,6 +3,7 @@ const cors = require('cors')
 const bodyParser = require("body-parser");
 const app = express()
 const port = 3001
+const sha256 = require('sha256');
 
 app.use(cors({credentials: true, origin: 'http://localhost:3000'}));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -35,10 +36,25 @@ app.get('/', (req, res) => {
   )
 });
 
+app.post('/login', async (req,res) => {
+  console.log(req.body.username);
+  console.log(req.body.password);
+  var date = new Date().toISOString().split("T")[0];
+  var token = "";
+  const user = await knex('Login')
+    .where('username', req.body.username);
+    console.log(user);
+  if (user[0].password == req.body.password){
+    token = sha256(date + "isemp" + req.body.username);
+    console.log(token);
+    res.send({token:token});
+  }
+});
+
 app.get('/supervisors', async (req, res) => {
   const supervisors = await knex('Supervisor');
 
-  res.send(supervisors)
+  res.redirect(supervisors)
 })
 
 app.get('/notifications', async (req, res) => {
