@@ -1,5 +1,6 @@
 #!/bin/bash
-service httpd start
+
 cd /var/www/html
+npm i
 pm2 start index.js
 

@@ -3,3 +3,8 @@ isExistApp=`pgrep httpd`
 if [[ -n  $isExistApp ]]; then
     service httpd stop        
 fi
+isRunApp='pgrep node'
+if [[ -n  $isRunApp ]]; then
+    cd /var/www/html
+    pm2 delete all
+fi
